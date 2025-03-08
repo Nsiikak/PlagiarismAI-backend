@@ -1,1 +1,1 @@
-# PlagarismAI-backend
+# PlagiarismAI-backend
