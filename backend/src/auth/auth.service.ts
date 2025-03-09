@@ -29,7 +29,7 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const user = await this.usersRepository.findOne({
-      where: [{ matricOrStaffId: loginDto.identifier }],
+      where: [{ matricOrStaffId: loginDto.matricOrStaffId }],
     });
 
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {

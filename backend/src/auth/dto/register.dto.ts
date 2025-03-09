@@ -12,7 +12,7 @@ export class RegisterDto {
 
   @IsString()
   @IsNotEmpty()
-  identifier: string; // Matric Number (Student) or Staff ID (Teacher)
+  matricOrStaffId: string; // Matric Number (Student) or Staff ID (Teacher)
 
   @IsEmail()
   email: string;
