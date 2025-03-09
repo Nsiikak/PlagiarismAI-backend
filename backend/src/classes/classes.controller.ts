@@ -1,34 +1,48 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
-import { UpdateClassDto } from './dto/update-class.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../auth/dto/register.dto';
 
 @Controller('classes')
 export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
-  @Post()
-  create(@Body() createClassDto: CreateClassDto) {
-    return this.classesService.create(createClassDto);
+  @Post('create')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TEACHER)
+  create(@Request() req, @Body() createClassDto: CreateClassDto) {
+    return this.classesService.create(req.user.userId, createClassDto);
   }
 
-  @Get()
-  findAll() {
-    return this.classesService.findAll();
+  @Post('join/:classId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT)
+  joinClass(@Request() req, @Param('classId') classId: string) {
+    return this.classesService.joinClass(req.user.userId, classId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.classesService.findOne(+id);
+  @Get('my-classes')
+  @UseGuards(JwtAuthGuard)
+  getMyClasses(@Request() req) {
+    return this.classesService.getUserClasses(req.user.userId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateClassDto: UpdateClassDto) {
-    return this.classesService.update(+id, updateClassDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.classesService.remove(+id);
+  @Delete('delete/:classId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TEACHER)
+  deleteClass(@Request() req, @Param('classId') classId: string) {
+    return this.classesService.deleteClass(req.user.userId, classId);
   }
 }
