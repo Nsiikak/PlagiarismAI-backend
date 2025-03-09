@@ -1,15 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { NotificationsModule } from './notifications/notifications.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { ClassesModule } from './classes/classes.module';
-import { ClassesModule } from './classes/classes.module';
-import { AssignmentsModule } from './assignments/assignments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
