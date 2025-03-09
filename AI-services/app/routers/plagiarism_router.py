@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File
-from services.plagiarism_service import check_plagiarism
+from app.services.plagiarism_service import check_plagiarism
 
 router = APIRouter(prefix="/plagiarism", tags=["Plagiarism Checker"])
 

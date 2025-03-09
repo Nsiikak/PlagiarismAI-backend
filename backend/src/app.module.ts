@@ -1,10 +1,32 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
+import { SubmissionsModule } from './submissions/submissions.module';
+import { AssignmentsModule } from './assignments/assignments.module';
+import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { ClassesModule } from './classes/classes.module';
+import { ClassesModule } from './classes/classes.module';
+import { AssignmentsModule } from './assignments/assignments.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ConfigModule } from '@nestjs/config';
+import { UsersModule } from './users/users.module';
+import { DatabaseModule } from 'database/database.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    DatabaseModule,
+    AuthModule,
+    UsersModule,
+    ClassesModule,
+    AssignmentsModule,
+    NotificationsModule,
+    EnrollmentsModule,
+    SubmissionsModule,
+    AnnouncementsModule,
+  ],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.services.grading_service import (
     grade_mcq,
     grade_short_answer,
@@ -28,13 +28,15 @@ async def grade_code_endpoint(student_code: str, test_cases: dict):
 @router.post("/grade/assignment")
 async def grade_assignment_endpoint(file: UploadFile = File(...), marking_guide: UploadFile = File(...)):
     try:
-        student_text = (await file.read()).decode("utf-8")
-        guide_text = (await marking_guide.read()).decode("utf-8")
+        student_text = (await file.read()).decode(errors="ignore")
+        guide_text = (await marking_guide.read()).decode(errors="ignore")
+        
         result = grade_assignment(student_text, guide_text)
+        
         return {
             "student_file": file.filename,
             "marking_guide": marking_guide.filename,
             "grading_result": result
         }
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
