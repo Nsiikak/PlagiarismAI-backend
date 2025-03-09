@@ -21,7 +21,7 @@ export class User {
   fullName: string;
 
   @Column({ unique: true })
-  identifier: string; // Matric Number (Student) or Staff ID (Teacher)
+  matricOrStaffId: string; // Matric Number (Student) or Staff ID (Teacher)
 
   @Column({ unique: true })
   email: string;

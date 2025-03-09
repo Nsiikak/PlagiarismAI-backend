@@ -29,7 +29,7 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const user = await this.usersRepository.findOne({
-      where: [{ identifier: loginDto.identifier }],
+      where: [{ matricOrStaffId: loginDto.identifier }],
     });
 
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
@@ -38,7 +38,7 @@ export class AuthService {
 
     const payload = {
       sub: user.id,
-      identifier: user.identifier,
+      matricOrStaffId: user.matricOrStaffId,
       role: user.role,
     };
     return { access_token: this.jwtService.sign(payload) };
