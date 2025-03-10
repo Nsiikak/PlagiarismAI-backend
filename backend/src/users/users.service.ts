@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,36 +12,71 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from 'src/auth/dto/register.dto';
+import { LoginDto } from '../../src/auth/dto/login.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    // private jwtService: JwtService,
   ) {}
 
   // Create a new user (Registration)
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const { matricOrStaffId, password, role } = createUserDto;
+  async createUser(createUserDto: CreateUserDto): Promise<{ message: string }> {
+    const { fullName, email, matricOrStaffId, password, role } = createUserDto;
 
-    // Check if user already exists
-    const existingUser = await this.userRepo.findOne({
-      where: { matricOrStaffId },
-    });
-    if (existingUser) {
-      throw new ConflictException('User with this ID already exists');
+    try {
+      // Check if user already exists
+      const existingUser = await this.userRepo.findOne({
+        where: { matricOrStaffId },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('User with this ID already exists');
+      }
+
+      // Hash password before saving
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser = this.userRepo.create({
+        fullName,
+        email,
+        matricOrStaffId,
+        password: hashedPassword,
+        role: role as UserRole,
+      });
+
+      await this.userRepo.save(newUser);
+
+      return { message: 'User registered successfully' };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error; // Re-throw conflict exception
+      }
+
+      throw new InternalServerErrorException('User registration failed');
+    }
+  }
+
+  //login
+  async login(loginDto: LoginDto): Promise<{ message: string }> {
+    const { matricOrStaffId, password } = loginDto;
+
+    // Check if the user exists
+    const user = await this.userRepo.findOne({ where: { matricOrStaffId } });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Hash password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-    const newUser = this.userRepo.create({
-      matricOrStaffId,
-      password: hashedPassword,
-      role: role as UserRole,
-    });
-
-    return await this.userRepo.save(newUser);
+    return { message: 'Login successful' };
   }
 
   // Get all users

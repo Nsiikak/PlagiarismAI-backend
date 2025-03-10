@@ -12,6 +12,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { LoginDto } from 'src/auth/dto/login.dto';
 
 @Controller('users')
 export class UsersController {
@@ -21,6 +22,11 @@ export class UsersController {
   @Post('register')
   async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
+  }
+  // Login a user
+  @Post('login')
+  async login(@Body() loginDto: LoginDto) {
+    return this.usersService.login(loginDto);
   }
 
   // Get all users (Protected)
