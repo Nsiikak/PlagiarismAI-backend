@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -17,16 +22,30 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-    const newUser = this.usersRepository.create({
-      ...registerDto,
-      password: hashedPassword,
-    });
+    try {
+      const existingUser = await this.usersRepository.findOne({
+        where: { email: registerDto.email },
+      });
 
-    await this.usersRepository.save(newUser);
-    return { message: 'User registered successfully' };
+      if (existingUser) {
+        throw new ConflictException('User with this email already exists');
+      }
+
+      const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+      const newUser = this.usersRepository.create({
+        ...registerDto,
+        password: hashedPassword,
+      });
+
+      await this.usersRepository.save(newUser);
+      return { message: 'User registered successfully' };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error; // User already exists
+      }
+      throw new InternalServerErrorException('User registration failed');
+    }
   }
-
   async login(loginDto: LoginDto) {
     const user = await this.usersRepository.findOne({
       where: [{ matricOrStaffId: loginDto.matricOrStaffId }],
