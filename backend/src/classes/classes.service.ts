@@ -18,9 +18,9 @@ export class ClassesService {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async create(teacherId: string, createClassDto: CreateClassDto) {
+  async create(matricOrStaffId: string, createClassDto: CreateClassDto) {
     const teacher = await this.usersRepository.findOne({
-      where: { id: teacherId },
+      where: { id: matricOrStaffId },
     });
 
     if (!teacher) throw new NotFoundException('Teacher not found');
