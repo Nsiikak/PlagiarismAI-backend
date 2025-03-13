@@ -29,6 +29,7 @@ export class ClassesService {
       ...createClassDto,
       teacher,
     });
+
     return this.classesRepository.save(newClass);
   }
 

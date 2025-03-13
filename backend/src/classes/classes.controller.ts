@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
@@ -22,8 +23,14 @@ export class ClassesController {
   @Post('create')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.TEACHER)
-  create(@Request() req, @Body() createClassDto: CreateClassDto) {
-    return this.classesService.create(req.user.userId, createClassDto);
+  async create(@Request() req, @Body() createClassDto: CreateClassDto) {
+    console.log('User in request:', req.user); // Debugging log
+    if (!req.user) throw new UnauthorizedException('User not authenticated');
+
+    return await this.classesService.create(
+      req.user.matricOrStaffId, // Ensure the user object contains matricOrStaffId
+      createClassDto,
+    );
   }
 
   @Post('join/:classId')

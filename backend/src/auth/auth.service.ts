@@ -60,6 +60,19 @@ export class AuthService {
       matricOrStaffId: user.matricOrStaffId,
       role: user.role,
     };
-    return { access_token: this.jwtService.sign(payload) };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET,
+      expiresIn: '1h',
+    });
+    console.log('Login response:', {
+      token,
+      user: {
+        id: user.id,
+        matricOrStaffId: user.matricOrStaffId,
+        role: user.role,
+      },
+    });
+
+    return { access_token: token };
   }
 }
