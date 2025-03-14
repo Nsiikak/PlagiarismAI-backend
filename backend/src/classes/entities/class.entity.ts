@@ -6,10 +6,10 @@ import {
   ManyToMany,
   JoinTable,
   OneToMany,
+  BeforeInsert,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Assignment } from '../../assignments/entities/assignment.entity';
-import { Announcement } from '../../announcements/entities/announcement.entity';
 
 @Entity()
 export class Class {
@@ -21,6 +21,12 @@ export class Class {
 
   @Column()
   description: string;
+
+  @Column({ unique: true })
+  classCode: string;
+
+  @Column({ default: true })
+  isActive: boolean;
 
   @ManyToOne(() => User, (user) => user.createdClasses, { onDelete: 'CASCADE' })
   teacher: User;
@@ -35,6 +41,14 @@ export class Class {
   @OneToMany(() => Assignment, (assignment) => assignment.class)
   assignments: Assignment[];
 
-  @OneToMany(() => Announcement, (announcement) => announcement.class)
-  announcements: Announcement[];
+  @BeforeInsert()
+  generateClassCode() {
+    // Generate a 6-character alphanumeric code
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    this.classCode = code;
+  }
 }

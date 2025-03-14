@@ -7,49 +7,76 @@ import {
   Delete,
   UseGuards,
   Request,
-  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
+import { JoinClassDto } from './dto/join-class.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../auth/dto/register.dto';
 
 @Controller('classes')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
   @Post('create')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.TEACHER)
   async create(@Request() req, @Body() createClassDto: CreateClassDto) {
-    console.log('User in request:', req.user); // Debugging log
-    if (!req.user) throw new UnauthorizedException('User not authenticated');
+    return await this.classesService.create(req.user.userId, createClassDto);
+  }
 
-    return await this.classesService.create(
-      req.user.matricOrStaffId, // Ensure the user object contains matricOrStaffId
-      createClassDto,
+  @Post('join')
+  @Roles(UserRole.STUDENT)
+  async joinClassByCode(@Request() req, @Body() joinClassDto: JoinClassDto) {
+    return this.classesService.joinClassByCode(
+      req.user.userId,
+      joinClassDto.classCode,
     );
   }
 
-  @Post('join/:classId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.STUDENT)
-  joinClass(@Request() req, @Param('classId') classId: string) {
-    return this.classesService.joinClass(req.user.userId, classId);
-  }
-
   @Get('my-classes')
-  @UseGuards(JwtAuthGuard)
-  getMyClasses(@Request() req) {
+  async getMyClasses(@Request() req) {
     return this.classesService.getUserClasses(req.user.userId);
   }
 
-  @Delete('delete/:classId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get(':id/students')
   @Roles(UserRole.TEACHER)
-  deleteClass(@Request() req, @Param('classId') classId: string) {
+  async getClassStudents(@Request() req, @Param('id') classId: string) {
+    const classEntity = await this.classesService.findOne(classId);
+    if (classEntity.teacher.id !== req.user.userId) {
+      throw new ForbiddenException(
+        'You can only view students in your own classes',
+      );
+    }
+    return this.classesService.getClassStudents(classId);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.TEACHER)
+  async deleteClass(@Request() req, @Param('id') classId: string) {
     return this.classesService.deleteClass(req.user.userId, classId);
+  }
+
+  @Post(':id/deactivate')
+  @Roles(UserRole.TEACHER)
+  async deactivateClass(@Request() req, @Param('id') classId: string) {
+    return this.classesService.deactivateClass(req.user.userId, classId);
+  }
+
+  @Post(':id/remove-student/:studentId')
+  @Roles(UserRole.TEACHER)
+  async removeStudent(
+    @Request() req,
+    @Param('id') classId: string,
+    @Param('studentId') studentId: string,
+  ) {
+    return this.classesService.removeStudent(
+      req.user.userId,
+      classId,
+      studentId,
+    );
   }
 }

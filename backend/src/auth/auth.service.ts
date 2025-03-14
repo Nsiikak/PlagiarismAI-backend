@@ -5,30 +5,31 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { UsersService } from '../users/users.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { RegisterDto, UserRole } from '../auth/dto/register.dto';
-import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private usersService: UsersService,
     private jwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto) {
     try {
-      const existingUser = await this.usersRepository.findOne({
-        where: { email: registerDto.email },
-      });
+      const existingUser = await this.usersService.findByMatricOrStaffId(
+        registerDto.matricOrStaffId,
+      );
 
       if (existingUser) {
-        throw new ConflictException('User with this email already exists');
+        throw new ConflictException('User with this ID already exists');
       }
 
       const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -41,15 +42,16 @@ export class AuthService {
       return { message: 'User registered successfully' };
     } catch (error) {
       if (error instanceof ConflictException) {
-        throw error; // User already exists
+        throw error;
       }
       throw new InternalServerErrorException('User registration failed');
     }
   }
+
   async login(loginDto: LoginDto) {
-    const user = await this.usersRepository.findOne({
-      where: [{ matricOrStaffId: loginDto.matricOrStaffId }],
-    });
+    const user = await this.usersService.findByMatricOrStaffId(
+      loginDto.matricOrStaffId,
+    );
 
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
@@ -60,19 +62,16 @@ export class AuthService {
       matricOrStaffId: user.matricOrStaffId,
       role: user.role,
     };
-    const token = this.jwtService.sign(payload, {
-      secret: process.env.JWT_SECRET,
-      expiresIn: '1h',
-    });
-    console.log('Login response:', {
-      token,
+
+    const token = this.jwtService.sign(payload);
+
+    return {
+      access_token: token,
       user: {
         id: user.id,
         matricOrStaffId: user.matricOrStaffId,
         role: user.role,
       },
-    });
-
-    return { access_token: token };
+    };
   }
 }

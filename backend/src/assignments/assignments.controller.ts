@@ -15,20 +15,36 @@ import { AssignmentsService } from './assignments.service';
 import * as Multer from 'multer';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 // import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
-import { GradeAssignmentDto } from './dto/grade-assignment.dto';
+// import { GradeAssignmentDto } from './dto/grade-assignment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../auth/dto/register.dto';
+import { HttpService } from '@nestjs/axios';
+import * as fs from 'fs';
 
 @Controller('assignments')
 export class AssignmentsController {
-  constructor(private readonly assignmentsService: AssignmentsService) {}
+  constructor(
+    private readonly assignmentsService: AssignmentsService,
+    private readonly httpService: HttpService,
+  ) {}
 
   @Post('create')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.TEACHER)
-  create(@Request() req, @Body() createAssignmentDto: CreateAssignmentDto) {
+  @UseInterceptors(FileInterceptor('markingGuide'))
+  async create(
+    @Request() req,
+    @Body() createAssignmentDto: CreateAssignmentDto,
+    @UploadedFile() markingGuide?: Multer.File,
+  ) {
+    if (markingGuide) {
+      createAssignmentDto.markingGuide = await fs.promises.readFile(
+        markingGuide.path,
+        'utf8',
+      );
+    }
     return this.assignmentsService.create(req.user.userId, createAssignmentDto);
   }
 
@@ -39,27 +55,27 @@ export class AssignmentsController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads',
-        filename: (req, file, callback) =>
-          callback(null, `${Date.now()}-${file.originalname}`),
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          callback(null, `${uniqueSuffix}-${file.originalname}`);
+        },
       }),
       fileFilter: (req, file, callback) => {
-        if (
-          file.mimetype === 'text/plain' ||
-          file.mimetype ===
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        ) {
-          callback(null, true);
-        } else {
-          callback(new Error('Only .txt and .docx files are allowed'), false);
+        if (!file.originalname.match(/\.(txt|docx|pdf)$/)) {
+          return callback(
+            new Error('Only .txt, .docx, and .pdf files are allowed'),
+            false,
+          );
         }
+        callback(null, true);
       },
     }),
   )
-  submit(
+  async submit(
     @Request() req,
     @Param('id') assignmentId: string,
     @UploadedFile() file: Multer.File,
-    // @UploadedFile() file: Express.Multer.File,
   ) {
     return this.assignmentsService.submit(
       req.user.userId,
@@ -71,11 +87,15 @@ export class AssignmentsController {
   @Post(':id/grade')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.TEACHER)
-  grade(
-    @Param('id') submissionId: string,
-    @Body() gradeDto: GradeAssignmentDto,
-  ) {
-    return this.assignmentsService.grade(submissionId, gradeDto);
+  async grade(@Param('id') submissionId: string) {
+    return this.assignmentsService.gradeSubmission(submissionId);
+  }
+
+  @Post(':id/check-plagiarism')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TEACHER)
+  async checkPlagiarism(@Param('id') submissionId: string) {
+    return this.assignmentsService.checkPlagiarism(submissionId);
   }
 
   @Get(':id/submissions')

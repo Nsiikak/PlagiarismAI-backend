@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  IsEnum,
+  IsOptional,
+} from 'class-validator';
+import { AssignmentType } from '../entities/assignment.entity';
 
 export class CreateAssignmentDto {
   @IsString()
@@ -11,4 +18,14 @@ export class CreateAssignmentDto {
 
   @IsUUID()
   classId: string;
+
+  @IsEnum(AssignmentType)
+  type: AssignmentType;
+
+  @IsOptional()
+  @IsString()
+  markingGuide?: string;
+
+  @IsOptional()
+  testCases?: Record<string, string>;
 }

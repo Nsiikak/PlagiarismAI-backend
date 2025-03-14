@@ -9,7 +9,7 @@ import { Class } from '../../classes/entities/class.entity';
 import { Assignment } from '../../assignments/entities/assignment.entity';
 import { Submission } from '../../submissions/entities/submission.entity';
 import { UserRole } from '../../auth/dto/register.dto';
-import { Announcement } from '../../announcements/entities/announcement.entity';
+// import { Announcement } from '../../announcements/entities/announcement.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 
 @Entity()
@@ -49,8 +49,8 @@ export class User {
   @OneToMany(() => Submission, (submission) => submission.student)
   submissions: Submission[];
 
-  @OneToMany(() => Announcement, (announcement) => announcement.teacher)
-  announcements: Announcement[];
+  // @OneToMany(() => Announcement, (announcement) => announcement.teacher)
+  // announcements: Announcement[];
 
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];

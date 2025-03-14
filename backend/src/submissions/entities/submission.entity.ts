@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Assignment } from '../../assignments/entities/assignment.entity';
 
@@ -12,6 +18,12 @@ export class Submission {
 
   @Column({ nullable: true })
   grade?: number;
+
+  @Column({ nullable: true })
+  plagiarismScore?: number;
+
+  @CreateDateColumn()
+  submittedAt: Date;
 
   @ManyToOne(() => User, (user) => user.submissions, { onDelete: 'CASCADE' })
   student: User;

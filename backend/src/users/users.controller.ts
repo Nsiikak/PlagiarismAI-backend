@@ -1,59 +1,43 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
+  // Patch,
   Param,
   Delete,
   UseGuards,
+  // Body,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+// import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../auth/dto/register.dto';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // Register a new user
-  @Post('register')
-  async create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createUser(createUserDto);
-  }
-  // Login a user
-  @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return this.usersService.login(loginDto);
-  }
-
-  // Get all users (Protected)
-  @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll() {
+  @Roles(UserRole.TEACHER)
+  findAll() {
     return this.usersService.findAll();
   }
 
-  // Get user by ID (Protected)
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
-  // Update user details (Protected)
-  @UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  //   return this.usersService.update(id, updateUserDto);
+  // }
 
-  // Delete user (Protected)
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
+  @Roles(UserRole.TEACHER)
+  remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 }
