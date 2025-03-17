@@ -7,7 +7,6 @@ node_modules
 /dist/tsconfig.tsbuildinfo
 dist/tsconfig.tsbuildinfo
 
-
 venv
 /venv/lib/python3.8/site-packages
 /venv/lib/python3.8/dist-packages
@@ -25,6 +24,7 @@ lerna-debug.log*
 
 # OS
 .DS_Store
+/.DS_Store
 
 # Tests
 /coverage
