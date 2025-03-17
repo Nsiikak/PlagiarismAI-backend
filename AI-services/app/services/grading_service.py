@@ -27,15 +27,41 @@ def grade_essay(student_answer):
     return {"score": final_score, "feedback": feedback}
 
 def grade_code(student_code, test_cases):
+    local_namespace = {}  # Restrict execution to avoid polluting global scope
     try:
-        exec(student_code, globals())  # Execute student code
-        passed = sum(1 for inp, expected in test_cases.items() if eval(inp) == expected)
+        exec(student_code, {}, local_namespace)  # Execute student code in an isolated namespace
+
+        # Extract function name dynamically
+        student_func = None
+        for key, value in local_namespace.items():
+            if callable(value):  # Ensure it's a function
+                student_func = value
+                break
+
+        if student_func is None:
+            return {"score": 0, "feedback": "No function found in the submitted code."}
+
+        # Run test cases
+        passed = 0
+        for inp, expected in test_cases.items():
+            try:
+                args = eval(inp) if isinstance(inp, str) else inp  # Convert string input to tuple
+                output = student_func(*args)  # Call extracted function
+                if str(output) == str(expected):  # Ensure correct comparison
+                    passed += 1
+            except Exception as e:
+                return {"score": 0, "feedback": f"Runtime error: {str(e)}"}
+
+        # Compute score
         score = (passed / len(test_cases)) * 10
-        feedback = "Correct implementation" if passed == len(test_cases) else "Some test cases failed."
+        feedback = "Correct implementation" if passed == len(test_cases) else f"Some test cases failed. Passed {passed}/{len(test_cases)}"
+
     except Exception as e:
         score = 0
         feedback = f"Code error: {str(e)}"
+
     return {"score": score, "feedback": feedback}
+
 
 def grade_assignment(student_text, marking_guide):
     student_embedding = model.encode(student_text, convert_to_tensor=True)

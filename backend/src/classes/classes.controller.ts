@@ -23,13 +23,13 @@ export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
   @Post('create')
-  @Roles(UserRole.TEACHER)
+  @Roles(UserRole.TEACHER, UserRole.teacher)
   async create(@Request() req, @Body() createClassDto: CreateClassDto) {
-    return await this.classesService.create(req.user.userId, createClassDto);
+    return await this.classesService.create(req.user.Id, createClassDto);
   }
 
   @Post('join')
-  @Roles(UserRole.STUDENT)
+  @Roles(UserRole.STUDENT, UserRole.student)
   async joinClassByCode(@Request() req, @Body() joinClassDto: JoinClassDto) {
     return this.classesService.joinClassByCode(
       req.user.userId,

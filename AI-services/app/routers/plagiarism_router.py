@@ -4,7 +4,7 @@ from app.services.plagiarism_service import check_plagiarism
 router = APIRouter(prefix="/plagiarism", tags=["Plagiarism Checker"])
 
 @router.post("/")
-async def upload_files(file1: UploadFile = File(...), file2: UploadFile = File(...)):
+async def upload_files(file1: UploadFile = File(), file2: UploadFile = File()):
     try:
         doc1_text = (await file1.read()).decode("utf-8")
         doc2_text = (await file2.read()).decode("utf-8")

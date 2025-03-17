@@ -21,9 +21,9 @@ export class Notification {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column()
+  @Column({ nullable: true })
   recipientId: string;
 
-  @Column()
+  @Column({ default: false })
   isRead: boolean;
 }
