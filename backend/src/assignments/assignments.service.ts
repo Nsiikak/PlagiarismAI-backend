@@ -122,7 +122,7 @@ export class AssignmentsService {
 
     const response = await firstValueFrom(
       this.httpService.post(
-        'http://ai-grading-service:8000/grade/assignment',
+        'http://127.0.0.1:8000/grade/assignment',
         formData,
         {
           headers: { ...formData.getHeaders() },
@@ -138,7 +138,7 @@ export class AssignmentsService {
 
   private async gradeCode(submission: Submission) {
     const response = await firstValueFrom(
-      this.httpService.post('http://ai-grading-service:8000/grade/code', {
+      this.httpService.post('http://127.0.0.1:8000/grade/code', {
         student_code: fs.readFileSync(submission.fileUrl, 'utf8'),
         test_cases: submission.assignment.testCases,
       }),
@@ -175,13 +175,9 @@ export class AssignmentsService {
         formData.append('file2', fs.createReadStream(other.fileUrl));
 
         const response = await firstValueFrom(
-          this.httpService.post(
-            'http://ai-grading-service:8000/plagiarism',
-            formData,
-            {
-              headers: { ...formData.getHeaders() },
-            },
-          ),
+          this.httpService.post('http://127.0.0.1:8000/plagiarism', formData, {
+            headers: { ...formData.getHeaders() },
+          }),
         );
 
         if (
