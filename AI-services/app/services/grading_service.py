@@ -1,5 +1,9 @@
 from sentence_transformers import SentenceTransformer, util
 import torch
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+
 
 # Load Pre-trained Model
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -62,22 +66,58 @@ def grade_code(student_code, test_cases):
 
     return {"score": score, "feedback": feedback}
 
+def jaccard_similarity(text1, text2):
+    """Calculate Jaccard Similarity between two texts."""
+    set1 = set(text1.lower().split())
+    set2 = set(text2.lower().split())
+    return len(set1 & set2) / len(set1 | set2)
 
-def grade_assignment(student_text, marking_guide):
+def weighted_similarity(student_text, marking_guide):
+    """Compute a weighted similarity score using multiple metrics."""
+    # Encode using Sentence Transformer for semantic meaning
     student_embedding = model.encode(student_text, convert_to_tensor=True)
     guide_embedding = model.encode(marking_guide, convert_to_tensor=True)
-    similarity_score = util.pytorch_cos_sim(student_embedding, guide_embedding).item()
-    final_score = round(similarity_score * 100, 2)
 
-    if final_score >= 80:
+    # Cosine Similarity (Semantic)
+    cosine_sim = util.pytorch_cos_sim(student_embedding, guide_embedding).item()
+
+    # Jaccard Similarity (Lexical Overlap)
+    jaccard_sim = jaccard_similarity(student_text, marking_guide)
+
+    # Weighted score (70% Semantic, 30% Jaccard)
+    final_score = (cosine_sim * 0.7) + (jaccard_sim * 0.3)
+    return round(final_score * 100, 2)
+
+def extract_important_sentences(text, top_n=3):
+    sentences = text.split(". ")
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(sentences)
+    top_indices = np.array(tfidf_matrix.sum(axis=1)).flatten().argsort()[-top_n:][::-1]
+    return " ".join(sentences[i] for i in top_indices)
+
+
+def grade_assignment(student_text, marking_guide):
+    """Grades an assignment based on similarity with a marking guide."""
+    # Extract key content before comparison
+    important_student_text = extract_important_sentences(student_text)
+    important_marking_guide = extract_important_sentences(marking_guide)
+
+    # Compute similarity
+    similarity_score = weighted_similarity(important_student_text, important_marking_guide)
+
+    # Grading Scale
+    if similarity_score >= 80:
         grade = "A"
-    elif final_score >= 60:
+    elif similarity_score >= 60:
         grade = "B"
-    elif final_score >= 50:
+    elif similarity_score >= 50:
         grade = "C"
-    elif final_score >= 40:
+    elif similarity_score >= 40:
         grade = "D"
     else:
         grade = "F"
 
-    return {"similarity_score": final_score, "grade": grade}
+    return {
+        "similarity_percentage": similarity_score,
+        "grade": grade,
+    }
