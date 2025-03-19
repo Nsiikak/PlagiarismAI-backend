@@ -31,8 +31,8 @@ export class AssignmentsController {
   ) {}
 
   @Post('create')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.TEACHER)
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TEACHER, UserRole.teacher)
   @UseInterceptors(FileInterceptor('markingGuide'))
   async create(
     @Request() req,
