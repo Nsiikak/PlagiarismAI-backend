@@ -1,7 +1,3 @@
-Here’s your modified **README.md**, highlighting the backend structure and the endpoints for frontend consumption:  
-
----
-
 # **Plagiarism Detection API**  
 
 This project is structured into two major components:  
