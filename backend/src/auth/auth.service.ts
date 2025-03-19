@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
   UnauthorizedException,
@@ -23,36 +24,27 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    try {
-      const existingUser = await this.usersService.findByMatricOrStaffId(
-        registerDto.matricOrStaffId,
-      );
-
-      if (existingUser) {
-        throw new ConflictException('User with this ID already exists');
-      }
-
-      const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-      const newUser = this.usersRepository.create({
-        ...registerDto,
-        password: hashedPassword,
-      });
-
-      await this.usersRepository.save(newUser);
-      return { message: 'User registered successfully' };
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('User registration failed');
+    const existingUser = await this.usersService.findByMatricOrStaffId(
+      registerDto.matricOrStaffId,
+    );
+    if (existingUser) {
+      throw new ConflictException('User with this ID already exists');
     }
+
+    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    const newUser = this.usersRepository.create({
+      ...registerDto,
+      password: hashedPassword,
+    });
+
+    await this.usersRepository.save(newUser);
+    return { message: 'User registered successfully' };
   }
 
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findByMatricOrStaffId(
       loginDto.matricOrStaffId,
     );
-
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -62,7 +54,6 @@ export class AuthService {
       matricOrStaffId: user.matricOrStaffId,
       role: user.role,
     };
-
     const token = this.jwtService.sign(payload);
 
     return {

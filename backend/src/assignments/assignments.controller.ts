@@ -1,8 +1,8 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
-  Get,
   Param,
   UseGuards,
   Request,
@@ -12,44 +12,28 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { AssignmentsService } from './assignments.service';
-import * as Multer from 'multer';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
-// import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
-// import { GradeAssignmentDto } from './dto/grade-assignment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../auth/dto/register.dto';
-import { HttpService } from '@nestjs/axios';
-import * as fs from 'fs';
+import { Multer } from 'multer';
 
 @Controller('assignments')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AssignmentsController {
-  constructor(
-    private readonly assignmentsService: AssignmentsService,
-    private readonly httpService: HttpService,
-  ) {}
+  constructor(private readonly assignmentsService: AssignmentsService) {}
 
   @Post('create')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.TEACHER, UserRole.teacher)
-  @UseInterceptors(FileInterceptor('markingGuide'))
   async create(
     @Request() req,
     @Body() createAssignmentDto: CreateAssignmentDto,
-    @UploadedFile() markingGuide?: Multer.File,
   ) {
-    if (markingGuide) {
-      createAssignmentDto.markingGuide = await fs.promises.readFile(
-        markingGuide.path,
-        'utf8',
-      );
-    }
-    return this.assignmentsService.create(req.user.userId, createAssignmentDto);
+    return this.assignmentsService.create(req.user.id, createAssignmentDto);
   }
 
   @Post(':id/submit')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.STUDENT)
   @UseInterceptors(
     FileInterceptor('file', {
@@ -77,29 +61,22 @@ export class AssignmentsController {
     @Param('id') assignmentId: string,
     @UploadedFile() file: Multer.File,
   ) {
-    return this.assignmentsService.submit(
-      req.user.userId,
-      assignmentId,
-      file.path,
-    );
+    return this.assignmentsService.submit(req.user.id, assignmentId, file.path);
   }
 
   @Post(':id/grade')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.TEACHER)
   async grade(@Param('id') submissionId: string) {
     return this.assignmentsService.gradeSubmission(submissionId);
   }
 
   @Post(':id/check-plagiarism')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.TEACHER)
   async checkPlagiarism(@Param('id') submissionId: string) {
     return this.assignmentsService.checkPlagiarism(submissionId);
   }
 
   @Get(':id/submissions')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.TEACHER)
   getSubmissions(@Param('id') assignmentId: string) {
     return this.assignmentsService.getSubmissions(assignmentId);
