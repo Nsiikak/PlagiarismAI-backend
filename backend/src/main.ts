@@ -21,10 +21,10 @@ async function bootstrap() {
   // app.useGlobalGuards(new RolesGuard(reflector));
   // Configure Swagger options
   const config = new DocumentBuilder()
-    .setTitle('API Documentation')
-    .setDescription('The API description')
+    .setTitle('PlagiarismAI API Documentation')
+    .setDescription('The API description for PlagiarismAI')
     .setVersion('1.0')
-    .addBearerAuth() // Optional: Add JWT authentication
+    .addBearerAuth()
     .build();
 
   // Create Swagger document

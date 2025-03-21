@@ -9,6 +9,13 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { AssignmentsService } from './assignments.service';
@@ -19,6 +26,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../auth/dto/register.dto';
 import { Multer } from 'multer';
 
+@ApiTags('Assignments') // Group under "Assignments" in Swagger
+@ApiBearerAuth() // Require JWT Authentication
 @Controller('assignments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AssignmentsController {
@@ -26,6 +35,12 @@ export class AssignmentsController {
 
   @Post('create')
   @Roles(UserRole.TEACHER, UserRole.teacher)
+  @ApiOperation({ summary: 'Create a new assignment' })
+  @ApiResponse({ status: 201, description: 'Assignment created successfully.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only teachers can create assignments.',
+  })
   async create(
     @Request() req,
     @Body() createAssignmentDto: CreateAssignmentDto,
@@ -35,6 +50,13 @@ export class AssignmentsController {
 
   @Post(':id/submit')
   @Roles(UserRole.STUDENT)
+  @ApiOperation({ summary: 'Submit an assignment' })
+  @ApiConsumes('multipart/form-data') // Indicate file upload in Swagger
+  @ApiResponse({
+    status: 201,
+    description: 'Assignment submitted successfully.',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid file format.' })
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -66,18 +88,42 @@ export class AssignmentsController {
 
   @Post(':id/grade')
   @Roles(UserRole.TEACHER)
+  @ApiOperation({ summary: 'Grade an assignment submission' })
+  @ApiResponse({ status: 200, description: 'Submission graded successfully.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only teachers can grade submissions.',
+  })
   async grade(@Param('id') submissionId: string) {
     return this.assignmentsService.gradeSubmission(submissionId);
   }
 
   @Post(':id/check-plagiarism')
   @Roles(UserRole.TEACHER)
+  @ApiOperation({ summary: 'Check plagiarism for a submission' })
+  @ApiResponse({
+    status: 200,
+    description: 'Plagiarism check completed successfully.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only teachers can check plagiarism.',
+  })
   async checkPlagiarism(@Param('id') submissionId: string) {
     return this.assignmentsService.checkPlagiarism(submissionId);
   }
 
   @Get(':id/submissions')
   @Roles(UserRole.TEACHER)
+  @ApiOperation({ summary: 'Get all submissions for an assignment' })
+  @ApiResponse({
+    status: 200,
+    description: 'Submissions retrieved successfully.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only teachers can view submissions.',
+  })
   getSubmissions(@Param('id') assignmentId: string) {
     return this.assignmentsService.getSubmissions(assignmentId);
   }
