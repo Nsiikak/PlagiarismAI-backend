@@ -43,7 +43,7 @@ export class ClassesController {
   }
 
   @Get(':id/students')
-  @Roles(UserRole.TEACHER)
+  @Roles(UserRole.TEACHER, UserRole.teacher)
   async getClassStudents(@Request() req, @Param('id') classId: string) {
     const classEntity = await this.classesService.findOne(classId);
     if (classEntity.teacher.id !== req.user.userId) {
@@ -55,19 +55,19 @@ export class ClassesController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.TEACHER)
+  @Roles(UserRole.TEACHER, UserRole.teacher)
   async deleteClass(@Request() req, @Param('id') classId: string) {
     return this.classesService.deleteClass(req.user.userId, classId);
   }
 
   @Post(':id/deactivate')
-  @Roles(UserRole.TEACHER)
+  @Roles(UserRole.TEACHER, UserRole.teacher)
   async deactivateClass(@Request() req, @Param('id') classId: string) {
     return this.classesService.deactivateClass(req.user.userId, classId);
   }
 
   @Post(':id/remove-student/:studentId')
-  @Roles(UserRole.TEACHER)
+  @Roles(UserRole.TEACHER, UserRole.teacher)
   async removeStudent(
     @Request() req,
     @Param('id') classId: string,

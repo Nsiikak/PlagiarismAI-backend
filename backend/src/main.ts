@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigModule } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
@@ -18,6 +19,19 @@ async function bootstrap() {
   // Apply RolesGuard globally
   // const reflector = app.get(Reflector);
   // app.useGlobalGuards(new RolesGuard(reflector));
+  // Configure Swagger options
+  const config = new DocumentBuilder()
+    .setTitle('API Documentation')
+    .setDescription('The API description')
+    .setVersion('1.0')
+    .addBearerAuth() // Optional: Add JWT authentication
+    .build();
+
+  // Create Swagger document
+  const document = SwaggerModule.createDocument(app, config);
+
+  // Setup Swagger UI
+  SwaggerModule.setup('api-docs', app, document);
 
   app.setGlobalPrefix('api/v1');
   app.enableCors({ origin: 'http://localhost:8080' });
