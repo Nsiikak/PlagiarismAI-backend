@@ -19,6 +19,7 @@ async function bootstrap() {
   // Apply RolesGuard globally
   // const reflector = app.get(Reflector);
   // app.useGlobalGuards(new RolesGuard(reflector));
+
   // Configure Swagger options
   const config = new DocumentBuilder()
     .setTitle('PlagiarismAI API Documentation')
