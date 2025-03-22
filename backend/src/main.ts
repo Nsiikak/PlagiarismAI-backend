@@ -35,7 +35,14 @@ async function bootstrap() {
   SwaggerModule.setup('api-docs', app, document);
 
   app.setGlobalPrefix('api/v1');
-  app.enableCors({ origin: 'http://localhost:8080', credentials: true });
+  app.enableCors({
+    origin: [
+      'http://localhost:8080',
+      'http://localhost:5173',
+      'https://assessment-system-frontend.onrender.com',
+    ],
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
