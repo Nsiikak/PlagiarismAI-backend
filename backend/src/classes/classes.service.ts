@@ -70,10 +70,9 @@ export class ClassesService {
     }
 
     // Check if student is already enrolled
-    if (classEntity.students.some((s) => s.id === studentId)) {
+    if (classEntity.students.find((s) => s.id === studentId)) {
       throw new ConflictException('You are already enrolled in this class');
     }
-
     classEntity.students.push(student);
     const updatedClass = await this.classesRepository.save(classEntity);
 

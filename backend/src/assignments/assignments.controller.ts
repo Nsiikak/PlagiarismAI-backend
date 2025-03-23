@@ -48,6 +48,20 @@ export class AssignmentsController {
     return this.assignmentsService.create(req.user.id, createAssignmentDto);
   }
 
+  @Get('all')
+  @Roles(UserRole.TEACHER, UserRole.teacher)
+  @ApiOperation({ summary: 'Get all assignments' })
+  @ApiResponse({
+    status: 200,
+    description: 'Assignments retrieved successfully.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only teachers can view assignments.',
+  })
+  async getAllAssignments() {
+    return this.assignmentsService.getAllAssignments();
+  }
   @Post(':id/submit')
   @Roles(UserRole.STUDENT)
   @ApiOperation({ summary: 'Submit an assignment' })

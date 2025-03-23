@@ -36,6 +36,9 @@ export class AssignmentsService {
     const assignment = this.assignmentRepo.create({ ...dto, teacher });
     return this.assignmentRepo.save(assignment);
   }
+  async getAllAssignments() {
+    return this.assignmentRepo.find({ relations: ['teacher', 'class'] });
+  }
 
   async submit(studentId: string, assignmentId: string, fileUrl: string) {
     const assignment = await this.assignmentRepo.findOne({
