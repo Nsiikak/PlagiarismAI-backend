@@ -62,7 +62,7 @@ export class ClassesController {
   @ApiOperation({ summary: 'Get all classes for the logged-in user' })
   @ApiResponse({ status: 200, description: 'Classes retrieved successfully.' })
   async getMyClasses(@Request() req) {
-    return this.classesService.getUserClasses(req.user.userId);
+    return this.classesService.getUserClasses(req.user.id);
   }
 
   @Get(':id/students')
@@ -77,7 +77,7 @@ export class ClassesController {
   })
   async getClassStudents(@Request() req, @Param('id') classId: string) {
     const classEntity = await this.classesService.findOne(classId);
-    if (classEntity.teacher.id !== req.user.userId) {
+    if (classEntity.teacher.id !== req.user.id) {
       throw new ForbiddenException(
         'You can only view students in your own classes',
       );
@@ -94,7 +94,7 @@ export class ClassesController {
     description: 'Forbidden. Only teachers can delete classes.',
   })
   async deleteClass(@Request() req, @Param('id') classId: string) {
-    return this.classesService.deleteClass(req.user.userId, classId);
+    return this.classesService.deleteClass(req.user.id, classId);
   }
 
   @Post(':id/deactivate')
@@ -106,7 +106,7 @@ export class ClassesController {
     description: 'Forbidden. Only teachers can deactivate classes.',
   })
   async deactivateClass(@Request() req, @Param('id') classId: string) {
-    return this.classesService.deactivateClass(req.user.userId, classId);
+    return this.classesService.deactivateClass(req.user.id, classId);
   }
 
   @Post(':id/remove-student/:studentId')
@@ -125,10 +125,6 @@ export class ClassesController {
     @Param('id') classId: string,
     @Param('studentId') studentId: string,
   ) {
-    return this.classesService.removeStudent(
-      req.user.userId,
-      classId,
-      studentId,
-    );
+    return this.classesService.removeStudent(req.user.id, classId, studentId);
   }
 }
