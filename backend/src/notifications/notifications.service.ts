@@ -57,11 +57,20 @@ export class NotificationsService {
   }
 
   async sendToClass(classId: string, title: string, message: string) {
+    // Load users and their enrolled classes
     const users = await this.userRepo.find({
-      where: { classes: { id: classId } },
+      relations: ['enrolledClasses'], // Explicitly load the enrolledClasses relationship
     });
 
-    for (const user of users) {
+    // Filter users who are part of the specific class
+    const filteredUsers = users.filter((user) =>
+      user.enrolledClasses.some(
+        (enrolledClass) => enrolledClass.id === classId,
+      ),
+    );
+
+    // Send notifications to the filtered users
+    for (const user of filteredUsers) {
       await this.sendToUser(user.id, `${title}: ${message}`);
     }
   }

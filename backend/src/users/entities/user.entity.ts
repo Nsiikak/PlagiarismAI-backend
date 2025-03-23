@@ -9,7 +9,6 @@ import { Class } from '../../classes/entities/class.entity';
 import { Assignment } from '../../assignments/entities/assignment.entity';
 import { Submission } from '../../submissions/entities/submission.entity';
 import { UserRole } from '../../auth/dto/register.dto';
-// import { Announcement } from '../../announcements/entities/announcement.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { Exclude } from 'class-transformer';
 
@@ -22,7 +21,7 @@ export class User {
   fullName: string;
 
   @Column({ unique: true })
-  matricOrStaffId: string; // Matric Number (Student) or Staff ID (Teacher)
+  matricOrStaffId: string;
 
   @Column({ unique: true })
   email: string;
@@ -34,25 +33,17 @@ export class User {
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
 
-  classes: Class[];
-
   @OneToMany(() => Class, (classEntity) => classEntity.teacher)
   createdClasses: Class[];
 
   @ManyToMany(() => Class, (classEntity) => classEntity.students)
   enrolledClasses: Class[];
 
-  @ManyToMany(() => User, (user) => user.classes)
-  users: User[];
-
   @OneToMany(() => Assignment, (assignment) => assignment.teacher)
   createdAssignments: Assignment[];
 
   @OneToMany(() => Submission, (submission) => submission.student)
   submissions: Submission[];
-
-  // @OneToMany(() => Announcement, (announcement) => announcement.teacher)
-  // announcements: Announcement[];
 
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
