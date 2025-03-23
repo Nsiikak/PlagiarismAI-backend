@@ -76,8 +76,8 @@ export class NotificationsController {
     description: 'Notification marked as read successfully.',
   })
   @ApiResponse({ status: 404, description: 'Notification not found.' })
-  markAsRead(@Param('id') id: string) {
-    return this.notificationsService.markNotificationAsRead(id);
+  markAsRead(@Request() req, @Param('id') id: string) {
+    return this.notificationsService.markNotificationAsRead(req.user.id, id);
   }
 
   // Send a notification to a specific user

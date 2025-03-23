@@ -32,16 +32,22 @@ export class NotificationsService {
   }
 
   // Mark a notification as read
-  async markNotificationAsRead(id: string): Promise<Notification> {
+  async markNotificationAsRead(
+    userId: string,
+    notificationId: string,
+  ): Promise<Notification> {
     const notification = await this.notificationsRepository.findOne({
-      where: { id },
+      where: { id: notificationId, user: { id: userId } },
     });
     if (!notification) {
-      throw new NotFoundException(`Notification with ID ${id} not found`);
+      throw new NotFoundException(
+        `Notification with ID ${notificationId} not found for user ${userId}`,
+      );
     }
     notification.isRead = true;
     return this.notificationsRepository.save(notification);
   }
+
   async sendToUser(userId: string, message: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) return;
