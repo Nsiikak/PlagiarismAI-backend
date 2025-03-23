@@ -11,6 +11,7 @@ import { Class } from './entities/class.entity';
 import { CreateClassDto } from './dto/create-class.dto';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class ClassesService {
@@ -81,8 +82,8 @@ export class ClassesService {
       classEntity.teacher.id,
       `New student ${student.fullName} joined your class "${classEntity.name}"`,
     );
-
-    return updatedClass;
+    // Transform the updated class to exclude the password field
+    return plainToClass(Class, updatedClass, { excludeExtraneousValues: true });
   }
 
   async getUserClasses(userId: string) {

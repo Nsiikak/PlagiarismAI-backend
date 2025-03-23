@@ -11,6 +11,7 @@ import { Submission } from '../../submissions/entities/submission.entity';
 import { UserRole } from '../../auth/dto/register.dto';
 // import { Announcement } from '../../announcements/entities/announcement.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class User {
@@ -27,6 +28,7 @@ export class User {
   email: string;
 
   @Column()
+  @Exclude()
   password: string;
 
   @Column({ type: 'enum', enum: UserRole })
