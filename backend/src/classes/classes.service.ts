@@ -11,7 +11,7 @@ import { Class } from './entities/class.entity';
 import { CreateClassDto } from './dto/create-class.dto';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
-import { plainToClass } from 'class-transformer';
+// import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class ClassesService {
@@ -82,21 +82,25 @@ export class ClassesService {
       classEntity.teacher.id,
       `New student ${student.fullName} joined your class "${classEntity.name}"`,
     );
-    // Transform the updated class to exclude the password field
-    return plainToClass(Class, updatedClass, { excludeExtraneousValues: true });
+
+    return updatedClass;
   }
 
   async getUserClasses(userId: string) {
-    const user = await this.usersRepository.findOne({
-      where: { id: userId },
-      relations: ['createdClasses', 'enrolledClasses'],
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    const createdClasses = await this.classesRepository.find({
+      where: { teacher: user },
     });
-
-    if (!user) throw new NotFoundException('User not found');
+    const enrolledClasses = await this.classesRepository
+      .createQueryBuilder('class')
+      .innerJoin('class.students', 'student', 'student.id = :userId', {
+        userId,
+      })
+      .getMany();
 
     return {
-      createdClasses: user.createdClasses,
-      enrolledClasses: user.enrolledClasses,
+      createdClasses,
+      enrolledClasses,
     };
   }
 
