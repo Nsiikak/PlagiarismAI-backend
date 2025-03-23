@@ -24,12 +24,25 @@ export class ClassesService {
   ) {}
 
   async create(teacherId: string, createClassDto: CreateClassDto) {
+    const { name } = createClassDto;
+
+    // Check if the teacher exists
     const teacher = await this.usersRepository.findOne({
       where: { id: teacherId },
     });
 
     if (!teacher) throw new NotFoundException('Teacher not found');
 
+    // Check if a class with the same name already exists for the teacher
+    const existingClass = await this.classesRepository.findOne({
+      where: { name, teacher: { id: teacherId } },
+    });
+
+    if (existingClass) {
+      throw new ConflictException(`Class with name "${name}" already exists.`);
+    }
+
+    // Create the new class
     const newClass = this.classesRepository.create({
       ...createClassDto,
       teacher,
@@ -37,7 +50,7 @@ export class ClassesService {
 
     const savedClass = await this.classesRepository.save(newClass);
 
-    // Send notification to teacher with class code
+    // Send notification to the teacher with the class code
     await this.notificationsService.sendToUser(
       teacherId,
       `Class "${savedClass.name}" created successfully. Class code: ${savedClass.classCode}`,
