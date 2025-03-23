@@ -60,16 +60,23 @@ export class ClassesService {
   }
 
   async joinClassByCode(studentId: string, classCode: string) {
+    console.log(`Student ID (parameter): ${studentId}`);
+    console.log(`Class Code: ${classCode}`);
+
     const classEntity = await this.classesRepository.findOne({
       where: { classCode },
       relations: ['students', 'teacher'],
     });
 
     if (!classEntity) {
+      console.error('Class not found');
       throw new NotFoundException('Class not found');
     }
 
+    console.log('Class Entity:', classEntity);
+
     if (!classEntity.isActive) {
+      console.error('Class is no longer accepting new students');
       throw new ForbiddenException(
         'This class is no longer accepting new students',
       );
@@ -80,25 +87,40 @@ export class ClassesService {
     });
 
     if (!student) {
+      console.error('Student not found in the database');
       throw new NotFoundException('Student not found');
     }
 
-    // Check if student is already enrolled
-    if (classEntity.students.find((s) => s.id === studentId)) {
+    console.log('Student Retrieved:', student);
+
+    if (student.role !== 'student') {
+      console.error(`Invalid Role: ${student.role}`);
+      throw new ForbiddenException('Only students can join this class');
+    }
+
+    if (classEntity.students.some((s) => s.id === studentId)) {
+      console.error('Student is already enrolled');
       throw new ConflictException('You are already enrolled in this class');
     }
+
+    console.log(
+      `Enrolling student ${student.fullName} in class ${classEntity.name}`,
+    );
     classEntity.students.push(student);
+
     const updatedClass = await this.classesRepository.save(classEntity);
 
-    // Notify teacher of new student
+    console.log(`Class updated: ${updatedClass}`);
+
+    // Notify the teacher about the new student
     await this.notificationsService.sendToUser(
       classEntity.teacher.id,
       `New student ${student.fullName} joined your class "${classEntity.name}"`,
     );
 
+    console.log('Notification sent to teacher');
     return updatedClass;
   }
-
   async getUserClasses(userId: string) {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     const createdClasses = await this.classesRepository.find({

@@ -51,8 +51,9 @@ export class ClassesController {
     description: 'Forbidden. Only students can join classes.',
   })
   async joinClassByCode(@Request() req, @Body() joinClassDto: JoinClassDto) {
+    console.log(`Request User Info:`, req.user);
     return this.classesService.joinClassByCode(
-      req.user.userId,
+      req.user.id, // Ensure this is not undefined
       joinClassDto.classCode,
     );
   }
