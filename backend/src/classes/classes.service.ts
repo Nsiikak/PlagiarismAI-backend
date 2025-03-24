@@ -122,20 +122,40 @@ export class ClassesService {
     return updatedClass;
   }
   async getUserClasses(userId: string) {
+    // Get the user details
     const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+    // Get the classes created by the user
     const createdClasses = await this.classesRepository.find({
       where: { teacher: user },
     });
+
+    // Get the classes the user is enrolled in and include the teacher's full name
     const enrolledClasses = await this.classesRepository
       .createQueryBuilder('class')
       .innerJoin('class.students', 'student', 'student.id = :userId', {
         userId,
       })
+      .leftJoinAndSelect('class.teacher', 'teacher') // Join the teacher relationship
+      .select([
+        'class.id',
+        'class.name',
+        'class.description',
+        'class.classCode',
+        'class.isActive',
+        'teacher.fullName', // Include teacher's full name
+      ])
       .getMany();
+
+    // Map enrolled classes to include teacherFullName
+    const formattedEnrolledClasses = enrolledClasses.map((classItem) => ({
+      ...classItem,
+      teacherFullName: classItem.teacher?.fullName || null, // Add teacher's full name
+    }));
 
     return {
       createdClasses,
-      enrolledClasses,
+      enrolledClasses: formattedEnrolledClasses,
     };
   }
 
